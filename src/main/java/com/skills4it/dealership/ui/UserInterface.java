@@ -26,7 +26,7 @@ public class UserInterface {
         do {
             displayHeader();
             displayMenu();
-            int choice = readInt("Choose an option: ");
+            int choice = Helper.readInt("Choose an option: ");
             selectedOption = MenuOption.fromCode(choice).orElse(null);
             handleMenuChoice(selectedOption);
         } while (selectedOption != MenuOption.QUIT);
@@ -74,36 +74,36 @@ public class UserInterface {
     }
 
     private void processGetByPriceRequest() {
-        double minPrice = readDouble("Minimum price: ");
-        double maxPrice = readDouble("Maximum price: ");
+        double minPrice = Helper.readDouble("Minimum price: ");
+        double maxPrice = Helper.readDouble("Maximum price: ");
         displayVehicles(dealership.getVehiclesByPrice(minPrice, maxPrice));
     }
 
     private void processGetByMakeModelRequest() {
-        String make = readString("Make, leave empty for any: ");
-        String model = readString("Model, leave empty for any: ");
+        String make = Helper.readString("Make, leave empty for any: ");
+        String model = Helper.readString("Model, leave empty for any: ");
         displayVehicles(dealership.getVehiclesByMakeModel(make, model));
     }
 
     private void processGetByYearRequest() {
-        int minYear = readInt("Minimum year: ");
-        int maxYear = readInt("Maximum year: ");
+        int minYear = Helper.readInt("Minimum year: ");
+        int maxYear = Helper.readInt("Maximum year: ");
         displayVehicles(dealership.getVehiclesByYear(minYear, maxYear));
     }
 
     private void processGetByColorRequest() {
-        String color = readString("Color: ");
+        String color = Helper.readString("Color: ");
         displayVehicles(dealership.getVehiclesByColor(color));
     }
 
     private void processGetByMileageRequest() {
-        int minMileage = readInt("Minimum mileage: ");
-        int maxMileage = readInt("Maximum mileage: ");
+        int minMileage = Helper.readInt("Minimum mileage: ");
+        int maxMileage = Helper.readInt("Maximum mileage: ");
         displayVehicles(dealership.getVehiclesByMileage(minMileage, maxMileage));
     }
 
     private void processGetByVehicleTypeRequest() {
-        VehicleType vehicleType = readVehicleType("Vehicle type (" + VehicleType.getAllowedValuesText() + "): ");
+        VehicleType vehicleType = Helper.readVehicleType("Vehicle type (" + VehicleType.getAllowedValuesText() + "): ");
         displayVehicles(dealership.getVehiclesByType(vehicleType));
     }
 
@@ -114,19 +114,19 @@ public class UserInterface {
     private void processAddVehicleRequest() {
         System.out.println("Add a new vehicle");
 
-        int vin = readPositiveInt("VIN: ");
+        int vin = Helper.readPositiveInt("VIN: ");
         if (dealership.findVehicleByVin(vin).isPresent()) {
             System.out.println("A vehicle with this VIN already exists. Vehicle was not added.");
             return;
         }
 
-        int year = readYear("Year: ");
-        String make = readRequiredString("Make: ");
-        String model = readRequiredString("Model: ");
-        VehicleType vehicleType = readVehicleType("Vehicle type (" + VehicleType.getAllowedValuesText() + "): ");
-        String color = readRequiredString("Color: ");
-        int odometer = readPositiveInt("Odometer: ");
-        double price = readPositiveDouble("Price: ");
+        int year = Helper.readYear("Year: ");
+        String make = Helper.readRequiredString("Make: ");
+        String model = Helper.readRequiredString("Model: ");
+        VehicleType vehicleType = Helper.readVehicleType("Vehicle type (" + VehicleType.getAllowedValuesText() + "): ");
+        String color = Helper.readRequiredString("Color: ");
+        int odometer = Helper.readPositiveInt("Odometer: ");
+        double price = Helper.readPositiveDouble("Price: ");
 
         Vehicle vehicle = new Vehicle(vin, year, make, model, vehicleType, color, odometer, price);
         dealership.addVehicle(vehicle);
@@ -136,13 +136,13 @@ public class UserInterface {
     }
 
     private void processRemoveVehicleRequest() {
-        int vin = readPositiveInt("Enter VIN of vehicle to remove: ");
+        int vin = Helper.readPositiveInt("Enter VIN of vehicle to remove: ");
 
         dealership.findVehicleByVin(vin).ifPresentOrElse(vehicle -> {
             System.out.println("Vehicle found:");
             displayVehicles(List.of(vehicle));
 
-            String confirmation = readString("Remove this vehicle? yes/no: ");
+            String confirmation = Helper.readString("Remove this vehicle? yes/no: ");
             if (confirmation.equalsIgnoreCase("yes") || confirmation.equalsIgnoreCase("y")) {
                 dealership.removeVehicleByVin(vin);
                 fileManager.saveDealership(dealership);
@@ -172,90 +172,6 @@ public class UserInterface {
         System.out.println("---------------------------------------------------------------------------------------");
         System.out.println("Total vehicles: " + vehicles.size());
         pause();
-    }
-
-    private String readString(String prompt) {
-        System.out.print(prompt);
-        return scanner.nextLine().trim();
-    }
-
-    private String readRequiredString(String prompt) {
-        while (true) {
-            String value = readString(prompt);
-            if (!value.isBlank()) {
-                return value;
-            }
-            System.out.println("This field is required. Please try again.");
-        }
-    }
-
-    private VehicleType readVehicleType(String prompt) {
-        while (true) {
-            String input = readRequiredString(prompt);
-            var vehicleType = VehicleType.fromString(input);
-
-            if (vehicleType.isPresent()) {
-                return vehicleType.get();
-            }
-
-            System.out.println("Invalid vehicle type. Allowed values: " + VehicleType.getAllowedValuesText());
-        }
-    }
-
-    private int readInt(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String input = scanner.nextLine().trim();
-
-            try {
-                return Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a whole number.");
-            }
-        }
-    }
-
-    private int readPositiveInt(String prompt) {
-        while (true) {
-            int number = readInt(prompt);
-            if (number >= 0) {
-                return number;
-            }
-            System.out.println("Please enter a positive number.");
-        }
-    }
-
-    private int readYear(String prompt) {
-        while (true) {
-            int year = readInt(prompt);
-            if (year >= 1886 && year <= 2100) {
-                return year;
-            }
-            System.out.println("Please enter a realistic vehicle year between 1886 and 2100.");
-        }
-    }
-
-    private double readDouble(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String input = scanner.nextLine().trim();
-
-            try {
-                return Double.parseDouble(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number, for example 1995.00.");
-            }
-        }
-    }
-
-    private double readPositiveDouble(String prompt) {
-        while (true) {
-            double number = readDouble(prompt);
-            if (number >= 0) {
-                return number;
-            }
-            System.out.println("Please enter a positive number.");
-        }
     }
 
     private void pause() {
