@@ -39,6 +39,7 @@ public class UserInterface {
     }
 
     private void displayHeader() {
+
         System.out.println();
         System.out.println("=============================================");
         System.out.println(dealership.getName());
